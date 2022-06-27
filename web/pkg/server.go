@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -15,10 +14,9 @@ type Server interface {
 }
 
 type sdkHttpServer struct {
-	Name    string
+	name    string
 	handler Handler
 	root    Filter
-	ctxPool sync.Pool
 }
 
 func (s *sdkHttpServer) Route(method, pattern string, handleFunc func(ctx *Context)) {
@@ -34,39 +32,24 @@ func (s *sdkHttpServer) Run(addr string) error {
 	return http.ListenAndServe(addr, nil)
 }
 
-func (s *sdkHttpServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	c := s.ctxPool.Get().(*Context)
-	defer func() {
-		s.ctxPool.Put(c)
-	}()
-	c.Reset(writer, request)
-	s.root(c)
-}
-
 func (s *sdkHttpServer) Shutdown(ctx context.Context) error {
-	// 因为我们这个简单的框架，没有什么要清理的，
-	// 所以我们 sleep 一下来模拟这个过程
-	fmt.Printf("%s shutdown...\n", s.Name)
+	fmt.Println("server shutdown start")
 	time.Sleep(time.Second)
-	fmt.Printf("%s shutdown!!!\n", s.Name)
+	fmt.Println("server shutdown end")
 	return nil
 }
 
 func NewSdkHttpServer(name string, builders ...FilterBuilder) *sdkHttpServer {
 	handler := NewHandlerBasedMap()
 	root := handler.ServeHTTP
-	fmt.Println(len(builders))
 	for i := len(builders) - 1; i >= 0; i-- {
 		builder := builders[i]
-		root = builder(root)
+		root = builder(root) // Filter func
 	}
 	s := &sdkHttpServer{
-		Name:    name,
+		name:    name,
 		handler: handler,
 		root:    root,
-		ctxPool: sync.Pool{New: func() interface{} {
-			return newContext()
-		}},
 	}
 
 	return s

@@ -5,14 +5,15 @@ import (
 )
 
 type Router interface {
-	Route(method, pattern string, handlerFunc func(ctx *Context))
+	Route(method, pattern string, handlerFunc handlerFunc) error
 }
 
 type Handler interface {
-	ServeHTTP(ctx *Context)
+	ServeHTTP(c *Context)
 	Router
-	// Run()
 }
+
+type handlerFunc func(c *Context)
 
 type HandlerBasedMap struct {
 	// Handler
@@ -20,9 +21,10 @@ type HandlerBasedMap struct {
 	m map[string]func(ctx *Context)
 }
 
-func (h *HandlerBasedMap) Route(method, pattern string, handleFunc func(ctx *Context)) {
+func (h *HandlerBasedMap) Route(method, pattern string, handleFunc handlerFunc) error {
 	key := h.Key(method, pattern)
 	h.m[key] = handleFunc
+	return nil
 }
 
 func (h *HandlerBasedMap) ServeHTTP(ctx *Context) {
@@ -41,7 +43,8 @@ func (h *HandlerBasedMap) Key(method, url string) string {
 
 // 接口断言
 // 1
-// var _ Handler = (*HandlerBasedMap)(nil)
+var _ Handler = (*HandlerBasedMap)(nil)
+
 // 2
 // var _ Handler = &HandlerBasedMap{}
 

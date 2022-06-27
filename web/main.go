@@ -31,6 +31,21 @@ func order(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "这是订单")
 }
 
+// func h(ctx context.Context) {
+// 	fmt.Println("h start")
+// 	select {
+// 	case <-ctx.Done():
+// 		fmt.Println("time out ")
+// 	}
+// 	fmt.Println("h end")
+// }
+
+// func main() {
+// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+// 	h(ctx)
+// 	cancel()
+// }
+
 func main() {
 	shutdown := web.NewGracefulShutdown()
 	s := web.NewSdkHttpServer("test",
@@ -67,7 +82,7 @@ func main() {
 			time.Sleep(time.Second * 2)
 			return nil
 		},
-		//
+		// Reject new and waiting request
 		shutdown.RejectNewAndWaiting,
 		// 全部请求处理完了我们就可以关闭 server了
 		web.BuildCloseServerHook(s),

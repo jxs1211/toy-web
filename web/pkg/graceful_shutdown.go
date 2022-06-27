@@ -84,7 +84,7 @@ func WaitForShutdown(hooks ...Hook) {
 		fmt.Printf("get signal %s, application will shutdown \n", sig)
 		// forcely shutdown if not finished in 10 minutes
 		time.AfterFunc(time.Minute*10, func() {
-			fmt.Println("forcely shutdown if not finished in 10 minutes")
+			fmt.Println("forcely shutdown if application haven't been not shudown finished after 10 minutes")
 			os.Exit(1)
 		})
 		for _, h := range hooks {
